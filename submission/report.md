@@ -21,6 +21,7 @@ Môi trường: Google Colab, GPU Tesla T4, `ultralytics==8.4.171`, torch 2.11.0
 | 4A | `FLIP_IDX = [0, 1, 2, 3, 7, 6, 5, 4, 10, 11, 8, 9]` |
 | 4B | 40 epoch, imgsz 640, 4.3 phút trên T4: Box mAP50-95 0.930, Pose mAP50 0.995, Pose mAP50-95 0.457 |
 | 4C ⭐ | Bảng bên dưới |
+| Bài tập về nhà 3 ⭐ | Export ONNX và đo latency CPU của hai head, xem mục cuối |
 
 ## 4C — metric nào đã che lỗi `flip_idx`?
 
@@ -39,3 +40,29 @@ mAP50-95 chỉ từ 0.904 xuống 0.894, vì box không phụ thuộc nhãn trá
 Pose mAP50 giảm từ 0.995 xuống 0.878 (khoảng −12%), còn Pose mAP50-95, chuẩn nghiêm nhất, giảm từ 0.417 xuống 0.298
 (khoảng −29%). Vì vậy nên đo thêm trên một tập val có cả hổ quay trái (hoặc val lật gương) và xem metric pose theo
 ngưỡng chặt (mAP50-95) hoặc theo từng keypoint, thay vì chỉ nhìn box mAP hay mAP50.
+
+## Bài tập về nhà 3 — ONNX và latency trên CPU
+
+Ô cuối notebook (`c095`) export `yolo26n.pt` sang ONNX hai lần rồi đo bằng ONNX Runtime trên CPU của Colab
+(Intel Xeon 2.2 GHz, ảnh `bus.jpg`, trung bình 30 lần):
+- `end2end=False`: head one-to-many, output `(1, 84, 8400)`, NMS chạy ở hậu xử lý (`iou=0.7`);
+- `end2end=True`: head one-to-one, output `(1, 300, 6)`, không cần NMS.
+
+| Cấu hình | preprocess (ms) | inference (ms) | postprocess (ms) | số box |
+|---|---:|---:|---:|---:|
+| one-to-many + NMS, conf 0.25 | 5.69 | 126.84 | 1.69 | 5 |
+| one-to-many + NMS, conf 0.001 | 6.76 | 148.30 | 2.43 | 186 |
+| one-to-one NMS-free, conf 0.25 | 6.11 | 130.75 | 0.43 | 5 |
+| one-to-one NMS-free, conf 0.001 | 5.72 | 126.20 | 0.49 | 177 |
+
+Nhận xét:
+- Cột khác biệt rõ nhất là postprocess: NMS-free chỉ 0.43–0.49 ms và gần như không đổi theo conf, còn one-to-many + NMS
+  mất 1.69 ms ở conf 0.25 và 2.43 ms ở conf 0.001 (tăng khoảng 44% vì nhiều ứng viên hơn), tức là chậm hơn khoảng 4–5 lần.
+- Cột inference (khoảng 126–148 ms) dao động vì CPU Colab dùng chung, nên chênh lệch giữa hai head ở cột này không đáng tin;
+  tôi chỉ kết luận từ cột postprocess, vốn ổn định.
+- Với ảnh chỉ có 5 object, phần NMS tiết kiệm được chỉ 1–2 ms trên tổng khoảng 135–155 ms, nên lợi ích thực tế nhỏ. Lợi ích
+  lớn hơn khi cảnh đông và conf thấp, nhưng thí nghiệm này chưa đo trên ảnh đông người.
+- Số box ở conf 0.001 (186 và 177) khác với 203–204 khi chạy bằng PyTorch trên GPU ở 1C vì đây là hai đồ thị ONNX khác nhau.
+
+Lưu ý: ô này được chạy riêng trên runtime CPU (tài khoản đã hết hạn mức GPU sau lần chạy chính), sau lần
+`Restart session and run all` trên T4 của 53 ô trước. Ô ép `device="cpu"` nên không phụ thuộc loại runtime.
