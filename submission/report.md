@@ -1,8 +1,8 @@
 # Báo cáo Lab Ngày 18 — 2D Perception
 
-**Notebook đã chạy (còn nguyên output):**
-[lab_2d_perception_student.ipynb](https://github.com/chung170703/Track04-Day18-2D-perception-detection-segmentation-keypoints/blob/main/lab_2d_perception_student.ipynb)
-· mở trên Colab: [link](https://colab.research.google.com/github/chung170703/Track04-Day18-2D-perception-detection-segmentation-keypoints/blob/main/lab_2d_perception_student.ipynb)
+Link notebook đã chạy: https://github.com/chung170703/Track04-Day18-2D-perception-detection-segmentation-keypoints/blob/main/lab_2d_perception_student.ipynb
+
+(mở trên Colab: https://colab.research.google.com/github/chung170703/Track04-Day18-2D-perception-detection-segmentation-keypoints/blob/main/lab_2d_perception_student.ipynb)
 
 Môi trường: Google Colab, GPU Tesla T4, `ultralytics==8.4.171`, torch 2.11.0+cu130. Notebook được chạy bằng
 `Restart session and run all` (execution count 1–53 liên tục, không ô nào lỗi). Không hàm nào dùng phao
